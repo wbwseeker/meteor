@@ -20,12 +20,12 @@ all: dev
 ### Build ####################################################################
 .PHONY: virtualenv install dev
 
-dev: virtualenv
+dev: virtualenv resources
 	${PIP} install -q poetry
 	${POETRY} install
 	${PRECOMMIT} install
 
-install: virtualenv
+install: virtualenv resources
 	${POETRY} install --no-dev
 
 virtualenv:
@@ -36,6 +36,9 @@ virtualenv:
         ${POETRY} config --local virtualenvs.create false ; \
         ${POETRY} config --local virtualenvs.in-project true ; \
 	fi
+
+resources: virtualenv
+	${PYTHON} -c "import nltk; nltk.download('stopwords'); nltk.download('punkt')"
 
 
 ### Testing & Development ####################################################
@@ -48,7 +51,7 @@ coverage:
 	${COVERAGE} report -m
 
 mypy:
-	${MYPY} ${SRCDIR}
+	${MYPY} --ignore-missing-imports ${SRCDIR}
 
 ### Cleanup ##################################################################
 .PHONY: clean clean-env clean-all clean-build clean-test clean-dist

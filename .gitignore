@@ -3,6 +3,7 @@
 env/
 
 .python-version
+.mypy_cache
 
 
 # Created by https://www.gitignore.io/api/python,pycharm
