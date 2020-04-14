@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "projecttemplate"
+name = "meteor"
 version = "0.1.0"
 description = ""
-authors = ["Your Name <you@example.com>"]
+authors = ["Wolfgang Seeker"]
 
 [tool.poetry.dependencies]
 python = "^3.8"

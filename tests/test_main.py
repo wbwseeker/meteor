@@ -1,4 +1,4 @@
-from src.main import hello_world
+from meteor.main import hello_world
 
 
 def test_hello_world():

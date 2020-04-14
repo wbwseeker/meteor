@@ -1,7 +1,7 @@
 .PHONY: all
 
 ENV = env
-SRCDIR = src
+SRCDIR = meteor
 TESTDIR = tests
 
 PYTHON = ${ENV}/bin/python

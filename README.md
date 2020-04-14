@@ -1,7 +1,8 @@
-# Project template for Python
+# meteor
 
-Check [pyproject.toml](https://github.com/wbwseeker/project_template_python/blob/master/pyproject.toml) to see installed packages and tools.  
-This template is complete and can be built (but doesn't do anything).
+Meteor score for machine translation.
+
+TODO: disclaimer, usage, license,
 
 Build by typing `make`. This will build the project for development.
 
