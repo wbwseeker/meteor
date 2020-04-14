@@ -6,6 +6,8 @@ authors = ["Wolfgang Seeker"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
+nltk = "^3.5"
+mip = "^1.8.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
@@ -22,7 +24,8 @@ line-length = 79
 target-version = ['py38']
 
 [tool.isort]
-known_third_party = []
+force_single_line = true
+known_third_party = ["mip", "nltk", "pytest"]
 
 [build-system]
 requires = ["poetry>=0.12"]
