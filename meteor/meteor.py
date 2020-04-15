@@ -2,6 +2,7 @@ from abc import ABC
 from abc import abstractmethod
 from dataclasses import dataclass
 from dataclasses import field
+from enum import Enum
 from itertools import product
 from typing import Any
 from typing import List
@@ -13,6 +14,11 @@ from mip import maximize
 from mip import xsum
 from nltk import SnowballStemmer
 from nltk import word_tokenize
+
+
+class Language(str, Enum):
+    german = "german"
+    english = "english"
 
 
 @dataclass
@@ -60,10 +66,10 @@ class IdentityStage(StageBase):
 class StemmingStage(StageBase):
     """ Use stemming to find tokens with the same stem """
 
-    def __init__(self, weight: float, language: str, *args, **kwargs):
+    def __init__(self, weight: float, language: Language, *args, **kwargs):
         super().__init__(weight, *args, **kwargs)
         self._stemmer = SnowballStemmer(
-            language=language, ignore_stopwords=True
+            language=language.value, ignore_stopwords=True
         )
 
     def process_tokens(self, tokens: List[Token]):
@@ -71,18 +77,20 @@ class StemmingStage(StageBase):
             token.stages.append(self._stemmer.stem(token.text))
 
 
-def tokenize(text: str) -> List[Token]:
+def tokenize(text: str, language: Language) -> List[Token]:
     return [
         Token(tid=i, text=token)
-        for i, token in enumerate(word_tokenize(text, language="german"))
+        for i, token in enumerate(word_tokenize(text, language=language.value))
     ]
 
 
-def preprocess(stages: List[StageBase], text: str) -> List[Token]:
+def preprocess(
+    stages: List[StageBase], text: str, language: Language
+) -> List[Token]:
     """
     Tokenize the given text and apply all given matching stages to each token.
     """
-    tokens = tokenize(text)
+    tokens = tokenize(text, language)
     for stage in stages:
         stage.process_tokens(tokens)
         stage.validate(tokens)
@@ -215,14 +223,19 @@ def count_chunks(alignment: List[Tuple[int, int]]) -> int:
     return num_chunks
 
 
-def meteor(hypothesis: str, reference: str, stages: List[StageBase]) -> float:
+def meteor(
+    hypothesis: str,
+    reference: str,
+    stages: List[StageBase],
+    language: Language,
+) -> float:
     """
     Compute meteor score for the given sentence pair
     with the given set of matching stages.
     """
 
-    hypo_tokens = preprocess(stages, hypothesis)
-    ref_tokens = preprocess(stages, reference)
+    hypo_tokens = preprocess(stages, hypothesis, language)
+    ref_tokens = preprocess(stages, reference, language)
 
     if len(hypo_tokens) == 0 or len(ref_tokens) == 0:
         if len(hypo_tokens) != len(ref_tokens):
@@ -230,8 +243,10 @@ def meteor(hypothesis: str, reference: str, stages: List[StageBase]) -> float:
         return 1.0
 
     alignment = align(hypo_tokens, ref_tokens, stages)
-
     num_matches = len(alignment)
+    if num_matches == 0:
+        return 0.0
+
     precision = num_matches / float(len(hypo_tokens))
     recall = num_matches / float(len(ref_tokens))
     fscore = (10 * precision * recall) / (recall + 9 * precision)
@@ -242,3 +257,20 @@ def meteor(hypothesis: str, reference: str, stages: List[StageBase]) -> float:
     score = fscore * (1 - penalty)
 
     return score
+
+
+def meteor_macro_avg(
+    hypotheses: List[str],
+    references: List[str],
+    stages: List[StageBase],
+    language: Language,
+) -> float:
+    """
+    Apply meteor score to multiple hypothesis-reference pairs
+    and return the macro average.
+    """
+    scores = [
+        meteor(hypothesis, reference, stages, language)
+        for hypothesis, reference in zip(hypotheses, references)
+    ]
+    return sum(scores) / len(scores)
