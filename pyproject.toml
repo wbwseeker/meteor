@@ -8,6 +8,7 @@ authors = ["Wolfgang Seeker"]
 python = "^3.8"
 nltk = "^3.5"
 mip = "^1.8.0"
+typer = "^0.1.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
@@ -19,13 +20,16 @@ coverage = "*"
 # check hook versions in .pre-commit-config.yaml and update if outdated
 pre-commit = "*"
 
+[tool.poetry.scripts]
+meteor = 'meteor.cli:main'
+
 [tool.black]
 line-length = 79
 target-version = ['py38']
 
 [tool.isort]
 force_single_line = true
-known_third_party = ["mip", "nltk", "pytest"]
+known_third_party = ["mip", "nltk", "pytest", "typer"]
 
 [build-system]
 requires = ["poetry>=0.12"]

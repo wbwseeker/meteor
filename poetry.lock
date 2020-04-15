@@ -332,6 +332,23 @@ python-versions = "*"
 version = "1.4.1"
 
 [[package]]
+category = "main"
+description = "Typer, build great CLIs. Easy to code. Based on Python type hints."
+name = "typer"
+optional = false
+python-versions = ">=3.6"
+version = "0.1.1"
+
+[package.dependencies]
+click = ">=7.1.1,<7.2.0"
+
+[package.extras]
+all = ["colorama", "shellingham"]
+dev = ["autoflake", "flake8"]
+doc = ["mkdocs", "mkdocs-material", "markdown-include"]
+test = ["shellingham", "pytest (>=4.4.0)", "pytest-cov", "coverage", "pytest-xdist", "pytest-sugar", "mypy", "black", "isort"]
+
+[[package]]
 category = "dev"
 description = "Backported and Experimental Type Hints for Python 3.5+"
 name = "typing-extensions"
@@ -366,7 +383,7 @@ python-versions = "*"
 version = "0.1.9"
 
 [metadata]
-content-hash = "b047ac77e097fddc9b3641002483d932a247c2f8fc7d9065224a5b14bd1b7593"
+content-hash = "6a729754284d1345d678fe7423f019cc29361247fe5821a81f4d646e7c1edd44"
 python-versions = "^3.8"
 
 [metadata.files]
@@ -609,6 +626,10 @@ typed-ast = [
     {file = "typed_ast-1.4.1-cp38-cp38-win_amd64.whl", hash = "sha256:fc0fea399acb12edbf8a628ba8d2312f583bdbdb3335635db062fa98cf71fca4"},
     {file = "typed_ast-1.4.1-cp39-cp39-macosx_10_15_x86_64.whl", hash = "sha256:d43943ef777f9a1c42bf4e552ba23ac77a6351de620aa9acf64ad54933ad4d34"},
     {file = "typed_ast-1.4.1.tar.gz", hash = "sha256:8c8aaad94455178e3187ab22c8b01a3837f8ee50e09cf31f1ba129eb293ec30b"},
+]
+typer = [
+    {file = "typer-0.1.1-py3-none-any.whl", hash = "sha256:e6fdb492c2f20d2d8123b8b2f4efa060770f92664aad8d36126f53dce501e9a8"},
+    {file = "typer-0.1.1.tar.gz", hash = "sha256:180d746de86724f9f94e90fa95caa065b5af9b3b3c77fc9d4d4ca1b75adc0c01"},
 ]
 typing-extensions = [
     {file = "typing_extensions-3.7.4.2-py2-none-any.whl", hash = "sha256:f8d2bd89d25bc39dabe7d23df520442fa1d8969b82544370e03d88b5a591c392"},
