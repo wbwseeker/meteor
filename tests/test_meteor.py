@@ -5,11 +5,12 @@ import pytest
 from meteor import IdentityStage
 from meteor import StemmingStage
 from meteor import meteor
-from meteor.meteor import Language, meteor_macro_avg
+from meteor.meteor import Language
 from meteor.meteor import StageBase
 from meteor.meteor import Token
 from meteor.meteor import align
 from meteor.meteor import count_chunks
+from meteor.meteor import meteor_macro_avg
 from meteor.meteor import preprocess
 
 
