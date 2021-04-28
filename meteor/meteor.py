@@ -13,6 +13,7 @@ from typing import Tuple
 
 from mip import BINARY
 from mip import Model
+from mip import OptimizationStatus
 from mip import maximize
 from mip import xsum
 from nltk import SnowballStemmer
@@ -209,8 +210,10 @@ def align(
         )
     )
 
-    model.optimize()
-    # TODO: assert model has solution, otherwise throw error
+    status = model.optimize()
+    assert (
+        status != OptimizationStatus.INFEASIBLE
+    ), "The alignment problem was infeasible. Please open an issue on github."
 
     return [match for match, var in match_vars.items() if var.x >= 0.99]
 
