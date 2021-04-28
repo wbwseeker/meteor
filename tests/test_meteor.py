@@ -9,6 +9,7 @@ from meteor.meteor import Language
 from meteor.meteor import StageBase
 from meteor.meteor import Token
 from meteor.meteor import align
+from meteor.meteor import compute_cliques
 from meteor.meteor import count_chunks
 from meteor.meteor import meteor_macro_avg
 from meteor.meteor import preprocess
@@ -43,6 +44,46 @@ def test_alignment(stages, hypothesis, reference, alignment):
     ref_tokens = preprocess(stages, reference, Language.german)
 
     assert align(hypo_tokens, ref_tokens, stages) == alignment
+
+
+@pytest.mark.parametrize(
+    "matches, cliques",
+    [
+        (
+            [(0, 0), (1, 0), (2, 1), (2, 2)],
+            [[(0, 0), (1, 0)], [(2, 1), (2, 2)]],
+        ),
+        (
+            [(0, 1), (0, 3), (1, 0), (1, 2), (2, 1), (2, 3), (3, 0), (3, 2)],
+            [
+                [(0, 1), (0, 3), (2, 1), (2, 3)],
+                [(1, 0), (1, 2), (3, 0), (3, 2)],
+            ],
+        ),
+        (
+            [
+                (0, 1),
+                (0, 3),
+                (1, 0),
+                (1, 2),
+                (1, 4),
+                (2, 1),
+                (2, 3),
+                (3, 0),
+                (3, 2),
+                (3, 4),
+                (4, 1),
+                (4, 3),
+            ],
+            [
+                [(0, 1), (0, 3), (2, 1), (2, 3), (4, 1), (4, 3)],
+                [(1, 0), (1, 2), (1, 4), (3, 0), (3, 2), (3, 4)],
+            ],
+        ),
+    ],
+)
+def test_compute_cliques(matches, cliques):
+    assert compute_cliques(matches) == cliques
 
 
 @pytest.mark.parametrize(

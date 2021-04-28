@@ -3,8 +3,11 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from dataclasses import field
 from enum import Enum
+from itertools import groupby
 from itertools import product
+from operator import itemgetter
 from typing import Any
+from typing import Iterable
 from typing import List
 from typing import Tuple
 
@@ -119,9 +122,9 @@ def align(
         each token is matched with not more than one other token
             m(i,0) + ... + m(i, j) <= 1
             m(0,j) + ... + m(i, j) <= 1
-        there must be as many matches as there are possible matches in the
-        sentence with fewer possible matches
-            m(0,0) ... m(i,j) == min(hypo_matches, ref_matches)
+        there must be as many matches as there possible matches between
+        connected nodes in the alignment graph
+            m(0,0) ... m(i,j) == sum(possible matches per clique)
         if two matches cross each other, the corresponding crossing var is 1
             m(i,j) + m(k,l) - c(i,j,k,l) <= 1
 
@@ -146,7 +149,7 @@ def align(
 
     # create BILP
     model = Model("alignment")
-    model.verbose = 0
+    model.verbose = 0  # set to n > 0 to see solver output
 
     # create matching variables for each possible match
     match_vars = {
@@ -188,11 +191,15 @@ def align(
         if matches:
             model += xsum(matches) <= 1
 
-    # all words of the sentence with the lower number of possible matches
-    # must be matched
-    hypo_matches = len(set(h for h, _ in match_vars))
-    ref_matches = len(set(r for _, r in match_vars))
-    model += xsum(match_vars.values()) == min(hypo_matches, ref_matches)
+    # require all possible matches to be part of the solution
+    cliques = compute_cliques(match_vars.keys())
+    required_matches = sum(
+        [
+            min(len(set(h for h, _ in clique)), len(set(r for _, r in clique)))
+            for clique in cliques
+        ]
+    )
+    model += xsum(match_vars.values()) == required_matches
 
     # define objective: maximize match scores and minimize crossings
     model.objective = maximize(
@@ -203,8 +210,34 @@ def align(
     )
 
     model.optimize()
+    # TODO: assert model has solution, otherwise throw error
 
     return [match for match, var in match_vars.items() if var.x >= 0.99]
+
+
+def compute_cliques(
+    matches: Iterable[Tuple[int, int]]
+) -> List[List[Tuple[int, int]]]:
+    """
+    Group matches that are connected in the alignment graph into cliques
+    """
+    matches = list(matches)
+
+    # Simple union-find: group matches that connect the same node in the
+    # hypothesis or reference sentence.
+    sets = {index: index for index in range(len(matches))}
+    for i, (h_i, r_i) in enumerate(matches):
+        for j, (h_j, r_j) in enumerate(matches[i:]):
+            if h_i == h_j or r_i == r_j:
+                sets[i + j] = sets[i]
+
+    cliques = [
+        [matches[index] for index, _ in group]
+        for _, group in groupby(
+            sorted(sets.items(), key=itemgetter(1)), key=itemgetter(1)
+        )
+    ]
+    return cliques
 
 
 def count_chunks(alignment: List[Tuple[int, int]]) -> int:
