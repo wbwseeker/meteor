@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "meteor"
-version = "0.1.0"
+version = "0.1.1"
 description = "An implementation of the METEOR metric for machine translation"
 authors = ["Wolfgang Seeker"]
 
