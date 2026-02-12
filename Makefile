@@ -1,57 +1,64 @@
 .PHONY: all
 
-ENV = env
+ENV = .venv
 SRCDIR = meteor
 TESTDIR = tests
 
-PYTHON = ${ENV}/bin/python
+PYTHON = python3  # uses version from .python-version if pyenv is installed
+VENV_PYTHON = ${ENV}/bin/python
 PIP = ${ENV}/bin/pip
-VIRTUALENV = virtualenv
-POETRY = ${ENV}/bin/poetry
+POETRY = poetry  # Poetry should be installed globally
+PYTEST = ${ENV}/bin/pytest
 COVERAGE = ${ENV}/bin/coverage
-PYTEST = ${COVERAGE} run --source ${SRCDIR} -m pytest -vvrw
 PRECOMMIT = ${ENV}/bin/pre-commit
 MYPY = ${ENV}/bin/mypy
+RUFF = ${ENV}/bin/ruff
 
 
 all: dev
 
 
 ### Build ####################################################################
-.PHONY: virtualenv install dev
+.PHONY: venv install dev
 
-dev: virtualenv resources
-	${PIP} install -q poetry
-	${POETRY} install
+dev: venv
+	${POETRY} install --with dev
 	${PRECOMMIT} install
 
-install: virtualenv resources
-	${POETRY} install --no-dev
+install: venv
+	${POETRY} install --only main
 
-virtualenv:
+venv:
 	if [ ! -d "${ENV}" ]; then \
-	    ${VIRTUALENV} ${ENV} ; \
+	    ${PYTHON} -m venv ${ENV} ; \
 	    ${PIP} install --upgrade pip ; \
-        ${PIP} install poetry ; \
-        ${POETRY} config --local virtualenvs.create false ; \
-        ${POETRY} config --local virtualenvs.in-project true ; \
 	fi
-
-resources: virtualenv
-	${PYTHON} -c "import nltk; nltk.download('stopwords'); nltk.download('punkt')"
 
 
 ### Testing & Development ####################################################
-.PHONY: test coverage mypy
+.PHONY: test coverage mypy check lint format
 
 test:
-	${PYTEST} ${TESTDIR}
+	${COVERAGE} run --source ${SRCDIR} -m pytest -vvrw ${TESTDIR}
 
 coverage:
 	${COVERAGE} report -m
+	${COVERAGE} html
 
 mypy:
 	${MYPY} --ignore-missing-imports ${SRCDIR}
+
+# Ruff linting (replaces flake8, isort checks)
+lint:
+	${RUFF} check ${SRCDIR} ${TESTDIR}
+
+# Ruff formatting (replaces black, isort)
+format:
+	${RUFF} format ${SRCDIR} ${TESTDIR}
+	${RUFF} check --fix ${SRCDIR} ${TESTDIR}
+
+# Run all checks (for CI)
+check: lint mypy test
 
 ### Cleanup ##################################################################
 .PHONY: clean clean-env clean-all clean-build clean-test clean-dist
@@ -70,10 +77,12 @@ clean-build:
 	@find $(TESTDIR) -name '__pycache__' -delete 2>/dev/null || true
 	-@rm -rf *.egg-info
 	-@rm -rf __pycache__
+	-@rm -rf .ruff_cache
 
 clean-test:
 	-@rm -rf .cache
 	-@rm -rf .coverage
+	-@rm -rf htmlcov
 	-@rm -rf .pytest_cache/
 	-@rm -rf .mypy_cache/
 

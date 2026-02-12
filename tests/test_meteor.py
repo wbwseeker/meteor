@@ -1,5 +1,3 @@
-from typing import List
-
 import pytest
 
 from meteor import IdentityStage
@@ -101,7 +99,7 @@ def test_count_chunks(alignment, expected_chunks):
 
 def test_stage_validation():
     class BrokenStage(StageBase):
-        def process_tokens(self, tokens: List[Token]):
+        def process_tokens(self, tokens: list[Token]):
             for i, token in enumerate(tokens):
                 if i % 2:
                     token.stages.append(token.text)

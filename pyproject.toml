@@ -1,36 +1,45 @@
-[tool.poetry]
+[project]
 name = "meteor"
 version = "0.1.1"
 description = "An implementation of the METEOR metric for machine translation"
-authors = ["Wolfgang Seeker"]
+authors = [{name = "Wolfgang Seeker"}]
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "nltk>=3.9,<4.0",
+    "mip==1.16rc0",
+    "typer>=0.12,<1.0",
+]
 
-[tool.poetry.dependencies]
-python = "^3.8"
-nltk = "^3.5"
-mip = "^1.8.0"
-typer = "^0.1.1"
+[project.scripts]
+meteor = "meteor.cli:main"
 
-[tool.poetry.dev-dependencies]
-pytest = "*"
-pytest-randomly = "*"
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3"
+pytest-randomly = "^3.15"
 
-mypy = "*"
-coverage = "*"
+mypy = "^1.13"
+coverage = "^7.6"
+ruff = "^0.8"
 
 # check hook versions in .pre-commit-config.yaml and update if outdated
-pre-commit = "*"
+pre-commit = "^4.0"
 
-[tool.poetry.scripts]
-meteor = 'meteor.cli:main'
-
-[tool.black]
+[tool.ruff]
 line-length = 79
-target-version = ['py38']
+target-version = "py311"
 
-[tool.isort]
-force_single_line = true
-known_third_party = ["mip", "nltk", "pytest", "typer"]
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+ignore = []
+
+[tool.ruff.lint.isort]
+force-single-line = true
+known-third-party = ["mip", "nltk", "pytest", "typer"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
 
 [build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

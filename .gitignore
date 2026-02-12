@@ -1,6 +1,6 @@
 
 .idea/
-env/
+.venv/
 
 .python-version
 .mypy_cache

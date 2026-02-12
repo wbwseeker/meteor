@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Annotated
 
 import typer
 
@@ -9,36 +10,42 @@ from meteor import meteor_macro_avg
 
 
 def cli(
-    hypotheses_file: Path = typer.Option(
-        ...,
-        "-h",
-        "--hypotheses",
-        help="utf-8 encoded file with system output, one sentence per line",
-        exists=True,
-        file_okay=True,
-        dir_okay=False,
-        readable=True,
-        resolve_path=True,
-    ),
-    references_file: Path = typer.Option(
-        ...,
-        "-r",
-        "--references",
-        help="utf-8 encoded file with translation references, one sentence per line",  # noqa
-        exists=True,
-        file_okay=True,
-        dir_okay=False,
-        readable=True,
-        resolve_path=True,
-    ),
-    language: Language = typer.Option(
-        Language.german,
-        "-l",
-        "--language",
-        help="The language to run meteor for. Controls tokenization and stemming.",  # noqa
-        show_default=True,
-        case_sensitive=False,
-    ),
+    hypotheses_file: Annotated[
+        Path,
+        typer.Option(
+            "-h",
+            "--hypotheses",
+            help="utf-8 encoded file with system output, one sentence per line",  # noqa: E501
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            readable=True,
+            resolve_path=True,
+        ),
+    ],
+    references_file: Annotated[
+        Path,
+        typer.Option(
+            "-r",
+            "--references",
+            help="utf-8 encoded file with translation references, one sentence per line",  # noqa: E501
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            readable=True,
+            resolve_path=True,
+        ),
+    ],
+    language: Annotated[
+        Language,
+        typer.Option(
+            "-l",
+            "--language",
+            help="The language to run meteor for. Controls tokenization and stemming.",  # noqa: E501
+            show_default=True,
+            case_sensitive=False,
+        ),
+    ] = Language.german,
 ):
     """
     Computes the METEOR score for the given sentence pairs

@@ -1,5 +1,6 @@
 from abc import ABC
 from abc import abstractmethod
+from collections.abc import Iterable
 from dataclasses import dataclass
 from dataclasses import field
 from enum import Enum
@@ -7,9 +8,6 @@ from itertools import groupby
 from itertools import product
 from operator import itemgetter
 from typing import Any
-from typing import Iterable
-from typing import List
-from typing import Tuple
 
 from mip import BINARY
 from mip import Model
@@ -29,7 +27,7 @@ class Language(str, Enum):
 class Token:
     tid: int
     text: str
-    stages: List[Any] = field(default_factory=list)
+    stages: list[Any] = field(default_factory=list)
 
 
 class StageBase(ABC):
@@ -47,12 +45,12 @@ class StageBase(ABC):
         return self._weight
 
     @abstractmethod
-    def process_tokens(self, tokens: List[Token]):
+    def process_tokens(self, tokens: list[Token]):
         """
         Append a representation of each token to each token's stages list.
         """
 
-    def validate(self, tokens: List[Token]):
+    def validate(self, tokens: list[Token]):
         if len(set(len(token.stages) for token in tokens)) > 1:
             raise AssertionError(
                 "Unequal number of stage representations in tokens."
@@ -60,15 +58,15 @@ class StageBase(ABC):
 
 
 class IdentityStage(StageBase):
-    """ Exact matching of tokens """
+    """Exact matching of tokens"""
 
-    def process_tokens(self, tokens: List[Token]):
+    def process_tokens(self, tokens: list[Token]):
         for token in tokens:
             token.stages.append(token.text)
 
 
 class StemmingStage(StageBase):
-    """ Use stemming to find tokens with the same stem """
+    """Use stemming to find tokens with the same stem"""
 
     def __init__(self, weight: float, language: Language, *args, **kwargs):
         super().__init__(weight, *args, **kwargs)
@@ -76,12 +74,12 @@ class StemmingStage(StageBase):
             language=language.value, ignore_stopwords=True
         )
 
-    def process_tokens(self, tokens: List[Token]):
+    def process_tokens(self, tokens: list[Token]):
         for token in tokens:
             token.stages.append(self._stemmer.stem(token.text))
 
 
-def tokenize(text: str, language: Language) -> List[Token]:
+def tokenize(text: str, language: Language) -> list[Token]:
     return [
         Token(tid=i, text=token)
         for i, token in enumerate(word_tokenize(text, language=language.value))
@@ -89,8 +87,8 @@ def tokenize(text: str, language: Language) -> List[Token]:
 
 
 def preprocess(
-    stages: List[StageBase], text: str, language: Language
-) -> List[Token]:
+    stages: list[StageBase], text: str, language: Language
+) -> list[Token]:
     """
     Tokenize the given text and apply all given matching stages to each token.
     """
@@ -102,8 +100,8 @@ def preprocess(
 
 
 def align(
-    hypothesis: List[Token], reference: List[Token], stages: List[StageBase]
-) -> List[Tuple[int, int]]:
+    hypothesis: list[Token], reference: list[Token], stages: list[StageBase]
+) -> list[tuple[int, int]]:
     """
     Produce an alignment between matching tokens of each sentence.
     If there are multiple possible alignments, the one with the minimum
@@ -115,8 +113,8 @@ def align(
 
     variables:
         M(i,j): set of possible matches, defined by the different stages
-        C = M(i,j) x M(k,l): set of possible crossings of matches,
-                             for each i < k and j > l OR i > k and j < l
+        C = M(i,j) x M(k,m): set of possible crossings of matches,
+                             for each i < k and j > m OR i > k and j < m
         W: weights for each stage
 
     constraints:
@@ -127,11 +125,11 @@ def align(
         connected nodes in the alignment graph
             m(0,0) ... m(i,j) == sum(possible matches per clique)
         if two matches cross each other, the corresponding crossing var is 1
-            m(i,j) + m(k,l) - c(i,j,k,l) <= 1
+            m(i,j) + m(k,m) - c(i,j,k,m) <= 1
 
     objective function:
         maximize match scores, minimize crossings
-        MAX (SUM w(i,j) * m(i,j) - SUM c(i,j,k,l))
+        MAX (SUM w(i,j) * m(i,j) - SUM c(i,j,k,m))
 
     """
 
@@ -163,11 +161,11 @@ def align(
     # create crossing variables for each possible crossing of any two matches
     # add constraint that crossing var will be 1 if both matches are selected
     crossing_vars = []
-    for (i, j), (k, l) in product(match_vars.keys(), repeat=2):
-        if (i < k and j > l) or (i > k and j < l):
+    for (i, j), (k, m) in product(match_vars.keys(), repeat=2):
+        if (i < k and j > m) or (i > k and j < m):
             cvar = model.add_var(var_type=BINARY)
             model += (
-                xsum([-1.0 * cvar, match_vars[(i, j)], match_vars[(k, l)]])
+                xsum([-1.0 * cvar, match_vars[(i, j)], match_vars[(k, m)]])
                 <= 1
             )
             crossing_vars.append(cvar)
@@ -219,8 +217,8 @@ def align(
 
 
 def compute_cliques(
-    matches: Iterable[Tuple[int, int]]
-) -> List[List[Tuple[int, int]]]:
+    matches: Iterable[tuple[int, int]],
+) -> list[list[tuple[int, int]]]:
     """
     Group matches that are connected in the alignment graph into cliques
     """
@@ -243,7 +241,7 @@ def compute_cliques(
     return cliques
 
 
-def count_chunks(alignment: List[Tuple[int, int]]) -> int:
+def count_chunks(alignment: list[tuple[int, int]]) -> int:
     """
     Find the minimum number of chunks the alignment can be grouped into.
     """
@@ -251,7 +249,7 @@ def count_chunks(alignment: List[Tuple[int, int]]) -> int:
 
     num_chunks = 0
     last_h, last_r = -2, -2
-    for (h, r) in alignment:
+    for h, r in alignment:
         if abs(last_h - h) != 1 or abs(last_r - r) != 1:
             num_chunks += 1
         last_h, last_r = (h, r)
@@ -262,7 +260,7 @@ def count_chunks(alignment: List[Tuple[int, int]]) -> int:
 def meteor(
     hypothesis: str,
     reference: str,
-    stages: List[StageBase],
+    stages: list[StageBase],
     language: Language,
 ) -> float:
     """
@@ -296,9 +294,9 @@ def meteor(
 
 
 def meteor_macro_avg(
-    hypotheses: List[str],
-    references: List[str],
-    stages: List[StageBase],
+    hypotheses: list[str],
+    references: list[str],
+    stages: list[StageBase],
     language: Language,
 ) -> float:
     """
