@@ -1,64 +1,48 @@
 .PHONY: all
 
-ENV = .venv
 SRCDIR = meteor
 TESTDIR = tests
 
-PYTHON = python3  # uses version from .python-version if pyenv is installed
-VENV_PYTHON = ${ENV}/bin/python
-PIP = ${ENV}/bin/pip
-POETRY = poetry  # Poetry should be installed globally
-PYTEST = ${ENV}/bin/pytest
-COVERAGE = ${ENV}/bin/coverage
-PRECOMMIT = ${ENV}/bin/pre-commit
-MYPY = ${ENV}/bin/mypy
-RUFF = ${ENV}/bin/ruff
+POETRY = poetry
+RUN = ${POETRY} run
 
 
 all: dev
 
 
 ### Build ####################################################################
-.PHONY: venv install dev
+.PHONY: install dev
 
-dev: venv
+dev:
 	${POETRY} install --with dev
-	${PRECOMMIT} install
+	${RUN} pre-commit install
 
-install: venv
+install:
 	${POETRY} install --only main
-
-venv:
-	if [ ! -d "${ENV}" ]; then \
-	    ${PYTHON} -m venv ${ENV} ; \
-	    ${PIP} install --upgrade pip ; \
-	fi
 
 
 ### Testing & Development ####################################################
 .PHONY: test coverage mypy check lint format
 
 test:
-	${COVERAGE} run --source ${SRCDIR} -m pytest -vvrw ${TESTDIR}
+	${RUN} coverage run --source ${SRCDIR} -m pytest -vvrw ${TESTDIR}
 
 coverage:
-	${COVERAGE} report -m
-	${COVERAGE} html
+	${RUN} coverage report -m
+	${RUN} coverage html
 
 mypy:
-	${MYPY} --ignore-missing-imports ${SRCDIR}
+	${RUN} mypy --ignore-missing-imports ${SRCDIR}
 
-# Ruff linting (replaces flake8, isort checks)
 lint:
-	${RUFF} check ${SRCDIR} ${TESTDIR}
+	${RUN} ruff check ${SRCDIR} ${TESTDIR}
 
-# Ruff formatting (replaces black, isort)
 format:
-	${RUFF} format ${SRCDIR} ${TESTDIR}
-	${RUFF} check --fix ${SRCDIR} ${TESTDIR}
+	${RUN} ruff format ${SRCDIR} ${TESTDIR}
+	${RUN} ruff check --fix ${SRCDIR} ${TESTDIR}
 
-# Run all checks (for CI)
 check: lint mypy test
+
 
 ### Cleanup ##################################################################
 .PHONY: clean clean-env clean-all clean-build clean-test clean-dist
@@ -67,8 +51,8 @@ clean: clean-dist clean-test clean-build
 
 clean-all: clean clean-env
 
-clean-env: clean
-	-@rm -rf $(ENV)
+clean-env:
+	${POETRY} env remove --all
 
 clean-build:
 	@find $(SRCDIR) -name '*.pyc' -delete
