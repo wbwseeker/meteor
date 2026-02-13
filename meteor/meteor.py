@@ -250,7 +250,7 @@ def count_chunks(alignment: list[tuple[int, int]]) -> int:
     num_chunks = 0
     last_h, last_r = -2, -2
     for h, r in alignment:
-        if abs(last_h - h) != 1 or abs(last_r - r) != 1:
+        if h - last_h != 1 or r - last_r != 1:
             num_chunks += 1
         last_h, last_r = (h, r)
 
@@ -303,6 +303,8 @@ def meteor_macro_avg(
     Apply meteor score to multiple hypothesis-reference pairs
     and return the macro average.
     """
+    if not hypotheses:
+        return 0.0
     scores = [
         meteor(hypothesis, reference, stages, language)
         for hypothesis, reference in zip(hypotheses, references)
