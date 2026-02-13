@@ -11,7 +11,7 @@ Currently supports German and English but any language supported by NLTK's
 tokenization and stemming is trivial to add.
 
 
-### Disclaimer
+## Disclaimer
 
 I've built this for fun and because I wanted to know how it works.
 This is neither battle-tested nor has it ever been used in any serious machine
@@ -24,12 +24,16 @@ use the tool they were using.** The [implementation by Denkowski and Lavie](http
 NLTK's meteor implementation, the alignment is broken (NLTK version 3.5).)
 
 
-### Usage
+## Usage
 
 Building it will install a command line script called `meteor` which will run
 the metric on two files, one with system output and one with translation
 references. Both files must have one sentence per line and be of the same length.
 Default language is German. Type `meteor --help` to see a description of all options.
+
+```bash
+meteor -h hypotheses.txt -r references.txt -l german
+```
 
 If you don't want to use it with files, you can use it programmatically:
 ```python
@@ -51,10 +55,10 @@ If you want to implement your own matching stage, derive from `meteor.StageBase`
 and implement `process_tokens()`.
 
 
-### Development
+## Development
 
 Build by typing `make`. This will build the project for development.
-It will also download some nltk resources for the tokenizer and the stemmer.
+Some nltk resources for the tokenizer and the stemmer will be downloaded on the first import.
 
 Tokenization and stemming are done with NLTK's `word_tokenize()` and `SnowballStemmer`.
 
@@ -62,8 +66,8 @@ To find the best alignment, it relies on https://python-mip.com to solve
 a mixed integer linear program.
 
 
-### Dependencies
+## Dependencies
 
-* python 3.8
-* virtualenv
+* python 3.11 (higher versions are currently [not compatible with python-mip](https://github.com/coin-or/python-mip/issues/376))
+* [Poetry](https://python-poetry.org/)
 * make
